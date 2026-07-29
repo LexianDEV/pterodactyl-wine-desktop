@@ -1,0 +1,6 @@
+.env
+.idea/
+.vscode/
+*.swp
+*.log
+docker-compose.override.yml

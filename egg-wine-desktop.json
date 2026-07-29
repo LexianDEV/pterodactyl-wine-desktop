@@ -1,0 +1,78 @@
+{
+  "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2026-07-30T00:00:00+00:00",
+  "name": "Wine Desktop",
+  "author": "support@lexian.dev",
+  "description": "Runs Windows GUI applications inside Wine using a virtual desktop.",
+  "features": [],
+  "docker_images": {
+    "ghcr.io/lexiandev/wine-desktop:latest": "ghcr.io/lexiandev/wine-desktop:latest",
+    "ghcr.io/ptero-eggs/yolks:wine_latest": "ghcr.io/ptero-eggs/yolks:wine_latest",
+    "wine-desktop:latest": "wine-desktop:latest"
+  },
+  "file_denylist": [],
+  "startup": "wine {{SERVER_EXECUTABLE}}",
+  "config": {
+    "files": "{}",
+    "startup": "{\"done\":\"Wine Desktop is ready.\"}",
+    "logs": "{}",
+    "stop": "^C"
+  },
+  "scripts": {},
+  "variables": [
+    {
+      "name": "Server executable",
+      "description": "Windows executable path relative to /home/container, for example application.exe or MyApp/MyApp.exe.",
+      "env_variable": "SERVER_EXECUTABLE",
+      "default_value": "application.exe",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:255",
+      "field_type": "text"
+    },
+    {
+      "name": "Display width",
+      "description": "Virtual desktop width in pixels.",
+      "env_variable": "DISPLAY_WIDTH",
+      "default_value": "1280",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:640|max:7680",
+      "field_type": "text"
+    },
+    {
+      "name": "Display height",
+      "description": "Virtual desktop height in pixels.",
+      "env_variable": "DISPLAY_HEIGHT",
+      "default_value": "720",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:480|max:4320",
+      "field_type": "text"
+    },
+    {
+      "name": "VNC password",
+      "description": "Optional password for direct VNC access. Leave blank to disable VNC authentication.",
+      "env_variable": "VNC_PASSWORD",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:8",
+      "field_type": "text"
+    },
+    {
+      "name": "Wine prefix",
+      "description": "Persistent Wine prefix directory. Keep the default unless you have a specific reason to change it.",
+      "env_variable": "WINEPREFIX",
+      "default_value": "/home/container/.wine",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:255",
+      "field_type": "text"
+    }
+  ]
+}
