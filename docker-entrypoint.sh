@@ -94,6 +94,16 @@ mkdir -p "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
 #
+# Ensure current UID exists
+#
+if ! getent passwd "$(id -u)" >/dev/null; then
+    echo "container:x:$(id -u):$(id -g):Pterodactyl:/home/container:/bin/bash" >> /etc/passwd
+fi
+
+getent passwd "$(id -u)"
+whoami || true
+
+#
 # D-Bus
 #
 if command -v dbus-launch >/dev/null 2>&1; then
