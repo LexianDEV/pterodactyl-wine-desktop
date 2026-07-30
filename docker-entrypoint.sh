@@ -236,7 +236,30 @@ echo "-- Test Existing Prefix --"
 wine cmd /c ver || true
 
 echo
+echo "-- TMP --"
+
+ls -ld /tmp || true
+stat /tmp || true
+mount | grep ' /tmp ' || true
+
+echo
+echo "-- Filesystems --"
+
+df -h || true
+mount || true
+
+echo
+echo "-- User Lookup --"
+
+getent passwd 989 || true
+
+echo "HOME=$HOME"
+echo "USER=$USER"
+echo "LOGNAME=$LOGNAME"
+
+echo
 echo "-- Test Fresh Prefix in /tmp --"
+
 rm -rf /tmp/testprefix
 export WINEPREFIX=/tmp/testprefix
 
