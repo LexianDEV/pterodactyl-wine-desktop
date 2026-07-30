@@ -10,7 +10,7 @@
     "description": "Runs Windows GUI applications inside a persistent Wine virtual desktop with optional VNC and noVNC access.",
     "features": [],
     "docker_images": {
-        "Wine Desktop (Latest)": "ghcr.io\/lexiandev/pterodactyl-wine-desktop:latest",
+        "Wine Desktop (Latest)": "ghcr.io\/lexiandev/pterodactyl-wine-desktop:latest"
     },
     "file_denylist": [],
     "startup": "wine {{SERVER_EXECUTABLE}}",
