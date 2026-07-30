@@ -196,18 +196,79 @@ if [[ ! -f "$WINEPREFIX/system.reg" ]]; then
     fi
 fi
 
-echo "STARTUP=$STARTUP"
-echo "SERVER_EXECUTABLE=$SERVER_EXECUTABLE"
-env | sort | grep -E 'STARTUP|SERVER|WINE'
+log "Wine Desktop is ready."
 
 #
-# Launch the startup command from Pterodactyl
+# Debug
 #
+echo
+echo "========== WINE DEBUG =========="
 
+echo "-- Environment --"
+echo "STARTUP=${STARTUP:-<unset>}"
+echo "SERVER_EXECUTABLE=${SERVER_EXECUTABLE:-<unset>}"
+echo "DISPLAY=$DISPLAY"
+echo "WINEPREFIX=$WINEPREFIX"
+
+echo
+echo "-- Identity --"
+id || true
+whoami || true
+pwd || true
+
+echo
+echo "-- Home Directory --"
+ls -ld /home/container || true
+ls -ld /home/container/.wine || true
+ls -la /home/container/.wine || true
+
+echo
+echo "-- Prefix Files --"
+file /home/container/.wine/system.reg || true
+file /home/container/.wine/drive_c/windows/system32/kernel32.dll || true
+
+echo
+echo "-- Wine Version --"
+wine --version || true
+
+echo
+echo "-- Test Existing Prefix --"
+wine cmd /c ver || true
+
+echo
+echo "-- Test Fresh Prefix in /tmp --"
+rm -rf /tmp/testprefix
+export WINEPREFIX=/tmp/testprefix
+
+wineboot --init || true
+wine cmd /c ver || true
+
+echo
+echo "-- Restoring Original Prefix --"
+export WINEPREFIX=/home/container/.wine
+
+echo
+echo "-- Startup Expansion --"
 MODIFIED_STARTUP=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g')
+
+echo "Raw:      ${STARTUP}"
+echo "Expanded: $(eval echo "${MODIFIED_STARTUP}")"
+
+echo
+echo "========== END DEBUG =========="
+echo
+
+#
+# Launch application
+#
+cd /home/container
 
 log "Executing: ${MODIFIED_STARTUP}"
 
-cd /home/container
-
 exec bash -lc "${MODIFIED_STARTUP}"
+
+#
+# Execute inherited yolk entrypoint
+#
+log "Starting inherited command: $*"
+exec "$@"
