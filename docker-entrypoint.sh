@@ -227,11 +227,17 @@ mkdir -p "$WINEPREFIX"
 if [[ ! -f "$WINEPREFIX/system.reg" ]]; then
     log "Initializing Wine prefix..."
 
-    if ! wineboot --init; then
+    log "Initializing Wine prefix..."
+
+    wineboot --init 2>&1 | tee /tmp/wine-desktop-wineboot.log
+    status=${PIPESTATUS[0]}
+
+    if [[ $status -ne 0 ]]; then
         log "Wine prefix initialization failed."
-        log "See: /tmp/wine-desktop-wineboot.log"
-        exit 1
+        exit $status
     fi
+
+    log "Wine prefix initialized successfully."
 fi
 
 log "Wine Desktop is ready."
@@ -264,4 +270,24 @@ ls -l "$WINEPREFIX/drive_c/windows/system32/kernel32.dll"
 winepath -w C:\\ || true
 wine --version
 
-exec bash -lc "${MODIFIED_STARTUP}"
+echo "=== Wine binary diagnostics ==="
+
+find /opt/wine-stable -maxdepth 2 -type f | sort
+
+echo
+echo "wine loader:"
+file /opt/wine-stable/bin/wine
+
+echo
+echo "wine64:"
+ls -l /opt/wine-stable/bin/wine64 || true
+
+echo
+echo "preloaders:"
+find /opt/wine-stable -name '*preloader*'
+
+echo
+echo "ldd wine64:"
+ldd /opt/wine-stable/bin/wine64 2>&1 || true
+
+exec wine cmd /c ver
