@@ -197,6 +197,28 @@ case "${ENABLE_VNC,,}" in
         ;;
 esac
 
+log "=== Filesystem diagnostics ==="
+
+id
+pwd
+
+echo "HOME=$HOME"
+echo "WINEPREFIX=$WINEPREFIX"
+
+ls -ld /home
+ls -ld /home/container || true
+
+mount | grep "/home/container" || true
+
+if touch /home/container/.write-test 2>/dev/null; then
+    log "/home/container is writable"
+    rm -f /home/container/.write-test
+else
+    log "/home/container is NOT writable"
+fi
+
+ls -ld "$WINEPREFIX" 2>/dev/null || log "Wine prefix does not exist yet"
+
 #
 # Wine Prefix
 #
@@ -225,5 +247,19 @@ log "USER=$(id -u):$(id -g)"
 log "Executing: $(eval echo "${MODIFIED_STARTUP}")"
 
 cd /home/container
+
+log "=== Wine diagnostics ==="
+
+id
+echo "HOME=$HOME"
+echo "DISPLAY=$DISPLAY"
+echo "WINEPREFIX=$WINEPREFIX"
+
+ls -ld "$WINEPREFIX"
+ls -l "$WINEPREFIX/system.reg"
+ls -l "$WINEPREFIX/drive_c/windows/system32/kernel32.dll"
+
+winepath -w C:\\ || true
+wine --version
 
 exec bash -lc "${MODIFIED_STARTUP}"
