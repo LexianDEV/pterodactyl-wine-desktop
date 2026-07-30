@@ -47,13 +47,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh \
-    && mkdir -p /home/container \
-    && chown -R container:container /home/container 2>/dev/null || true
 
-EXPOSE 5900/tcp 6080/tcp
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && mkdir -p /home/container
 
-# Keep the official tini process and inherited CMD. The wrapper prepares the
-# desktop and then execs the official /entrypoint.sh command unchanged.
-ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/usr/local/bin/docker-entrypoint.sh"]
-CMD ["/bin/bash", "/entrypoint.sh"]
+EXPOSE 5900 6080
+
+ENTRYPOINT ["/usr/bin/tini","-g","--","/usr/local/bin/docker-entrypoint.sh"]

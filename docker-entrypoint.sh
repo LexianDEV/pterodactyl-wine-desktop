@@ -196,14 +196,18 @@ if [[ ! -f "$WINEPREFIX/system.reg" ]]; then
     fi
 fi
 
-echo "Testing Wine..."
-wine cmd /c ver
-echo "Exit code: $?"
-
-log "Wine Desktop is ready."
+echo "STARTUP=$STARTUP"
+echo "SERVER_EXECUTABLE=$SERVER_EXECUTABLE"
+env | sort | grep -E 'STARTUP|SERVER|WINE'
 
 #
-# Execute inherited yolk entrypoint
+# Launch the startup command from Pterodactyl
 #
-log "Starting inherited command: $*"
-exec "$@"
+
+MODIFIED_STARTUP=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g')
+
+log "Executing: ${MODIFIED_STARTUP}"
+
+cd /home/container
+
+exec bash -lc "${MODIFIED_STARTUP}"
