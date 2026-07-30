@@ -83,8 +83,8 @@ chmod 700 "$XDG_RUNTIME_DIR"
 # D-Bus
 #
 if command -v dbus-launch >/dev/null 2>&1; then
-    eval "$(dbus-launch --sh-syntax)"
-    [[ -n "${DBUS_SESSION_BUS_PID:-}" ]] && children+=("$DBUS_SESSION_BUS_PID")
+    eval "$(dbus-launch --sh-syntax)" || \
+        log "D-Bus failed to start; continuing."
 fi
 
 #
@@ -189,7 +189,7 @@ mkdir -p "$WINEPREFIX"
 if [[ ! -f "$WINEPREFIX/system.reg" ]]; then
     log "Initializing Wine prefix..."
 
-    if ! wineboot --init >/tmp/wine-desktop-wineboot.log 2>&1; then
+    if ! wineboot --init; then
         log "Wine prefix initialization failed."
         log "See: /tmp/wine-desktop-wineboot.log"
         exit 1
