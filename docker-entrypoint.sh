@@ -248,6 +248,8 @@ log "Executing: $(eval echo "${MODIFIED_STARTUP}")"
 
 cd /home/container
 
+env | grep -E '^(WINE|LD_|HOME|PATH|DISPLAY|USER|LOGNAME|XDG)'
+
 log "=== Wine diagnostics ==="
 
 id
