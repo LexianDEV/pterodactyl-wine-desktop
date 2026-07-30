@@ -220,11 +220,6 @@ fi
 ls -ld "$WINEPREFIX" 2>/dev/null || log "Wine prefix does not exist yet"
 
 #
-# Temporary test
-#
-export WINEPREFIX=/home/container/testprefix
-
-#
 # Wine Prefix
 #
 mkdir -p "$WINEPREFIX"
