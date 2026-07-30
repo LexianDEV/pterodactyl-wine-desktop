@@ -7,12 +7,12 @@
   "exported_at": "2026-07-30T00:00:00+00:00",
   "name": "Wine Desktop",
   "author": "support@lexian.dev",
-  "description": "Runs Windows GUI applications inside Wine using a virtual desktop.",
+  "description": "Runs Windows GUI applications inside a persistent Wine virtual desktop with optional VNC and noVNC access.",
   "features": [],
   "docker_images": {
-    "ghcr.io/lexiandev/wine-desktop:latest": "ghcr.io/lexiandev/wine-desktop:latest",
-    "ghcr.io/ptero-eggs/yolks:wine_latest": "ghcr.io/ptero-eggs/yolks:wine_latest",
-    "wine-desktop:latest": "wine-desktop:latest"
+    "ghcr.io/lexiandev/wine-desktop:latest": "Wine Desktop (Latest)",
+    "ghcr.io/ptero-eggs/yolks:wine_latest": "Wine Yolk",
+    "wine-desktop:latest": "Local Wine Desktop"
   },
   "file_denylist": [],
   "startup": "wine {{SERVER_EXECUTABLE}}",
@@ -22,11 +22,17 @@
     "logs": "{}",
     "stop": "^C"
   },
-  "scripts": {},
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\nset -e\necho \"Nothing to install.\"",
+      "container": "ghcr.io/pterodactyl/installers:debian",
+      "entrypoint": "/bin/bash"
+    }
+  },
   "variables": [
     {
-      "name": "Server executable",
-      "description": "Windows executable path relative to /home/container, for example application.exe or MyApp/MyApp.exe.",
+      "name": "Server Executable",
+      "description": "Windows executable to launch relative to /home/container.",
       "env_variable": "SERVER_EXECUTABLE",
       "default_value": "application.exe",
       "user_viewable": true,
@@ -35,7 +41,7 @@
       "field_type": "text"
     },
     {
-      "name": "Display width",
+      "name": "Display Width",
       "description": "Virtual desktop width in pixels.",
       "env_variable": "DISPLAY_WIDTH",
       "default_value": "1280",
@@ -45,7 +51,7 @@
       "field_type": "text"
     },
     {
-      "name": "Display height",
+      "name": "Display Height",
       "description": "Virtual desktop height in pixels.",
       "env_variable": "DISPLAY_HEIGHT",
       "default_value": "720",
@@ -55,23 +61,113 @@
       "field_type": "text"
     },
     {
-      "name": "VNC password",
-      "description": "Optional password for direct VNC access. Leave blank to disable VNC authentication.",
-      "env_variable": "VNC_PASSWORD",
-      "default_value": "",
+      "name": "Display Color Depth",
+      "description": "Virtual desktop color depth.",
+      "env_variable": "DISPLAY_DEPTH",
+      "default_value": "24",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "nullable|string|max:8",
+      "rules": "required|integer|in:16,24,32",
       "field_type": "text"
     },
     {
-      "name": "Wine prefix",
-      "description": "Persistent Wine prefix directory. Keep the default unless you have a specific reason to change it.",
+      "name": "Wine Prefix",
+      "description": "Persistent Wine prefix directory.",
       "env_variable": "WINEPREFIX",
       "default_value": "/home/container/.wine",
       "user_viewable": true,
       "user_editable": true,
       "rules": "required|string|max:255",
+      "field_type": "text"
+    },
+    {
+      "name": "Wine Debug",
+      "description": "Wine debug channels. Use '-all' to disable debug output.",
+      "env_variable": "WINEDEBUG",
+      "default_value": "-all",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:255",
+      "field_type": "text"
+    },
+    {
+      "name": "DLL Overrides",
+      "description": "Optional WINEDLLOVERRIDES value.",
+      "env_variable": "WINEDLLOVERRIDES",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:255",
+      "field_type": "text"
+    },
+    {
+      "name": "Locale",
+      "description": "Locale used by Wine.",
+      "env_variable": "LANG",
+      "default_value": "en_US.UTF-8",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:64",
+      "field_type": "text"
+    },
+    {
+      "name": "Timezone",
+      "description": "Timezone used inside the container.",
+      "env_variable": "TZ",
+      "default_value": "UTC",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:64",
+      "field_type": "text"
+    },
+    {
+      "name": "Enable VNC",
+      "description": "Enable the x11vnc server. If disabled, noVNC is also disabled.",
+      "env_variable": "ENABLE_VNC",
+      "default_value": "true",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "Enable noVNC",
+      "description": "Enable browser-based noVNC access.",
+      "env_variable": "ENABLE_NOVNC",
+      "default_value": "true",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "VNC Port",
+      "description": "TCP port used by x11vnc.",
+      "env_variable": "VNC_PORT",
+      "default_value": "5900",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:1|max:65535",
+      "field_type": "text"
+    },
+    {
+      "name": "noVNC Port",
+      "description": "TCP port used by the browser-based noVNC interface.",
+      "env_variable": "NOVNC_PORT",
+      "default_value": "6080",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:1|max:65535",
+      "field_type": "text"
+    },
+    {
+      "name": "VNC Password",
+      "description": "Optional password for VNC authentication.",
+      "env_variable": "VNC_PASSWORD",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:8",
       "field_type": "text"
     }
   ]
