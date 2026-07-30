@@ -196,12 +196,9 @@ if [[ ! -f "$WINEPREFIX/system.reg" ]]; then
     fi
 fi
 
-echo "WINEPREFIX=$WINEPREFIX"
-ls -la "$WINEPREFIX"
-ls -la "$WINEPREFIX/drive_c"
-ls -la "$WINEPREFIX/system.reg"
-ls -la "$WINEPREFIX/user.reg"
-ls -la "$WINEPREFIX/userdef.reg"
+echo "Testing Wine..."
+wine cmd /c ver
+echo "Exit code: $?"
 
 log "Wine Desktop is ready."
 
