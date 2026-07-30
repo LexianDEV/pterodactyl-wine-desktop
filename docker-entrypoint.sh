@@ -72,6 +72,20 @@ if ! xdpyinfo -display "$DISPLAY" >/dev/null 2>&1; then
     exit 1
 fi
 
+log "X server is ready."
+
+xdpyinfo -display "$DISPLAY" >/dev/null \
+    && log "xdpyinfo OK" \
+    || log "xdpyinfo FAILED"
+
+xset q >/dev/null 2>&1 \
+    && log "xset OK" \
+    || log "xset FAILED"
+
+xlsclients >/dev/null 2>&1 \
+    && log "xlsclients OK" \
+    || log "xlsclients FAILED"
+
 #
 # Runtime
 #
@@ -110,6 +124,8 @@ if ! pgrep -x xfce4-session >/dev/null 2>&1; then
 
     startxfce4 >/tmp/wine-desktop-xfce.log 2>&1 &
     children+=("$!")
+
+    sleep 5
 fi
 
 #
@@ -199,113 +215,16 @@ fi
 log "Wine Desktop is ready."
 
 #
-# Debug
+# Startup
 #
-echo
-echo "========== WINE DEBUG =========="
+MODIFIED_STARTUP=$(sed -e 's/{{/${/g' -e 's/}}/}/g' <<<"$STARTUP")
 
-echo "-- Environment --"
-echo "STARTUP=${STARTUP:-<unset>}"
-echo "SERVER_EXECUTABLE=${SERVER_EXECUTABLE:-<unset>}"
-echo "DISPLAY=$DISPLAY"
-echo "WINEPREFIX=$WINEPREFIX"
+log "Wine Desktop is ready."
+log "DISPLAY=${DISPLAY}"
+log "WINEPREFIX=${WINEPREFIX}"
+log "USER=$(id -u):$(id -g)"
+log "Executing: $(eval echo "${MODIFIED_STARTUP}")"
 
-echo
-echo "-- Identity --"
-id || true
-whoami || true
-pwd || true
-
-echo
-echo "-- Home Directory --"
-ls -ld /home/container || true
-ls -ld /home/container/.wine || true
-ls -la /home/container/.wine || true
-
-echo
-echo "-- Prefix Files --"
-file /home/container/.wine/system.reg || true
-file /home/container/.wine/drive_c/windows/system32/kernel32.dll || true
-
-echo
-echo "-- Wine Version --"
-wine --version || true
-
-echo
-echo "-- Test Existing Prefix --"
-wine cmd /c ver || true
-
-echo
-echo "-- TMP --"
-
-ls -ld /tmp || true
-stat /tmp || true
-mount | grep ' /tmp ' || true
-
-echo
-echo "-- Filesystems --"
-
-df -h || true
-mount || true
-
-echo
-echo "-- User Lookup --"
-
-getent passwd 989 || true
-
-echo "HOME=${HOME:-<unset>}"
-echo "USER=${USER:-<unset>}"
-echo "LOGNAME=${LOGNAME:-<unset>}"
-
-echo
-echo "-- TMP PREFIX TEST --"
-
-mkdir -p /tmp/testprefix
-ls -ld /tmp/testprefix
-
-export WINEPREFIX=/tmp/testprefix
-
-echo "Running wineboot..."
-
-timeout 20s wineboot --init
-
-echo "wineboot exit=$?"
-
-ps aux
-
-pgrep -af wineserver || true
-pgrep -af wine || true
-
-echo "Running cmd..."
-wine cmd /c ver
-echo "cmd exit=$?"
-
-echo
-echo "-- Restoring Original Prefix --"
-export WINEPREFIX=/home/container/.wine
-
-echo
-echo "-- Startup Expansion --"
-MODIFIED_STARTUP=$(echo "${STARTUP}" | sed -e 's/{{/${/g' -e 's/}}/}/g')
-
-echo "Raw:      ${STARTUP}"
-echo "Expanded: $(eval echo "${MODIFIED_STARTUP}")"
-
-echo
-echo "========== END DEBUG =========="
-echo
-
-#
-# Launch application
-#
 cd /home/container
 
-log "Executing: ${MODIFIED_STARTUP}"
-
 exec bash -lc "${MODIFIED_STARTUP}"
-
-#
-# Execute inherited yolk entrypoint
-#
-log "Starting inherited command: $*"
-exec "$@"
