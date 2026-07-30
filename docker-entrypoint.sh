@@ -253,9 +253,9 @@ echo "-- User Lookup --"
 
 getent passwd 989 || true
 
-echo "HOME=$HOME"
-echo "USER=$USER"
-echo "LOGNAME=$LOGNAME"
+echo "HOME=${HOME:-<unset>}"
+echo "USER=${USER:-<unset>}"
+echo "LOGNAME=${LOGNAME:-<unset>}"
 
 echo
 echo "-- TMP PREFIX TEST --"
