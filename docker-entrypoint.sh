@@ -219,7 +219,6 @@ log "Wine Desktop is ready."
 #
 MODIFIED_STARTUP=$(sed -e 's/{{/${/g' -e 's/}}/}/g' <<<"$STARTUP")
 
-log "Wine Desktop is ready."
 log "DISPLAY=${DISPLAY}"
 log "WINEPREFIX=${WINEPREFIX}"
 log "USER=$(id -u):$(id -g)"
