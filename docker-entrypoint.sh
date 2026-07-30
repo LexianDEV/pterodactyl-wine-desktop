@@ -266,8 +266,15 @@ ls -ld /tmp/testprefix
 export WINEPREFIX=/tmp/testprefix
 
 echo "Running wineboot..."
-wineboot --init
+
+timeout 20s wineboot --init
+
 echo "wineboot exit=$?"
+
+ps aux
+
+pgrep -af wineserver || true
+pgrep -af wine || true
 
 echo "Running cmd..."
 wine cmd /c ver
