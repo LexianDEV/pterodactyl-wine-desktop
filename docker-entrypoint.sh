@@ -258,13 +258,20 @@ echo "USER=$USER"
 echo "LOGNAME=$LOGNAME"
 
 echo
-echo "-- Test Fresh Prefix in /tmp --"
+echo "-- TMP PREFIX TEST --"
 
-rm -rf /tmp/testprefix
+mkdir -p /tmp/testprefix
+ls -ld /tmp/testprefix
+
 export WINEPREFIX=/tmp/testprefix
 
-wineboot --init || true
-wine cmd /c ver || true
+echo "Running wineboot..."
+wineboot --init
+echo "wineboot exit=$?"
+
+echo "Running cmd..."
+wine cmd /c ver
+echo "cmd exit=$?"
 
 echo
 echo "-- Restoring Original Prefix --"
