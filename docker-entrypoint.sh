@@ -15,6 +15,9 @@ ENABLE_VNC="${ENABLE_VNC:-true}"
 ENABLE_NOVNC="${ENABLE_NOVNC:-true}"
 
 WINEPREFIX="${WINEPREFIX:-/home/container/.wine}"
+# The base Wine image disables interactive Gecko/Mono installers. Pterodactyl
+# passes empty egg variables into the container, so preserve that safe default.
+WINEDLLOVERRIDES="${WINEDLLOVERRIDES:-mscoree,mshtml=}"
 
 export \
     DISPLAY \
@@ -25,7 +28,8 @@ export \
     NOVNC_PORT \
     ENABLE_VNC \
     ENABLE_NOVNC \
-    WINEPREFIX
+    WINEPREFIX \
+    WINEDLLOVERRIDES
 
 children=()
 
@@ -197,44 +201,40 @@ case "${ENABLE_VNC,,}" in
         ;;
 esac
 
-log "=== Filesystem diagnostics ==="
-
-id
-pwd
-
-echo "HOME=$HOME"
-echo "WINEPREFIX=$WINEPREFIX"
-
-ls -ld /home
-ls -ld /home/container || true
-
-mount | grep "/home/container" || true
-
-if touch /home/container/.write-test 2>/dev/null; then
-    log "/home/container is writable"
-    rm -f /home/container/.write-test
-else
-    log "/home/container is NOT writable"
-fi
-
-ls -ld "$WINEPREFIX" 2>/dev/null || log "Wine prefix does not exist yet"
-
 #
 # Wine Prefix
 #
+prefix_is_complete() {
+    [[ -f "$WINEPREFIX/system.reg" ]] || return 1
+    [[ -f "$WINEPREFIX/drive_c/windows/system32/kernel32.dll" ]] || return 1
+
+    # A 64-bit Wine 11 prefix must also contain its 32-bit WoW64 runtime.
+    if grep -q '^#arch=win64$' "$WINEPREFIX/system.reg"; then
+        [[ -f "$WINEPREFIX/drive_c/windows/syswow64/kernel32.dll" ]] || return 1
+    fi
+}
+
+if [[ -f "$WINEPREFIX/system.reg" ]] && ! prefix_is_complete; then
+    incomplete_prefix="${WINEPREFIX}.incomplete-$(date +%Y%m%d-%H%M%S)"
+    log "Wine prefix is incomplete; preserving it as ${incomplete_prefix}."
+    mv "$WINEPREFIX" "$incomplete_prefix"
+fi
+
 mkdir -p "$WINEPREFIX"
 
-if [[ ! -f "$WINEPREFIX/system.reg" ]]; then
+if ! prefix_is_complete; then
     log "Initializing Wine prefix..."
 
-    log "Initializing Wine prefix..."
-
-    wineboot --init 2>&1 | tee /tmp/wine-desktop-wineboot.log
-    status=${PIPESTATUS[0]}
-
-    if [[ $status -ne 0 ]]; then
+    if ! wineboot --init 2>&1 | tee /tmp/wine-desktop-wineboot.log; then
         log "Wine prefix initialization failed."
-        exit $status
+        exit 1
+    fi
+
+    wineserver -w
+
+    if ! prefix_is_complete; then
+        log "Wine prefix initialization did not create a complete runtime."
+        exit 1
     fi
 
     log "Wine prefix initialized successfully."
@@ -242,52 +242,12 @@ fi
 
 log "Wine Desktop is ready."
 
-#
-# Startup
-#
-MODIFIED_STARTUP=$(sed -e 's/{{/${/g' -e 's/}}/}/g' <<<"$STARTUP")
-
-log "DISPLAY=${DISPLAY}"
-log "WINEPREFIX=${WINEPREFIX}"
-log "USER=$(id -u):$(id -g)"
-log "Executing: $(eval echo "${MODIFIED_STARTUP}")"
-
 cd /home/container
 
-env | grep -E '^(WINE|LD_|HOME|PATH|DISPLAY|USER|LOGNAME|XDG)'
+# Retain the base image's update, winetricks, and STARTUP handling. Docker passes
+# its inherited command as arguments; Wings may explicitly clear that command.
+if (( $# > 0 )); then
+    exec "$@"
+fi
 
-log "=== Wine diagnostics ==="
-
-id
-echo "HOME=$HOME"
-echo "DISPLAY=$DISPLAY"
-echo "WINEPREFIX=$WINEPREFIX"
-
-ls -ld "$WINEPREFIX"
-ls -l "$WINEPREFIX/system.reg"
-ls -l "$WINEPREFIX/drive_c/windows/system32/kernel32.dll"
-
-winepath -w C:\\ || true
-wine --version
-
-echo "=== Wine binary diagnostics ==="
-
-find /opt/wine-stable -maxdepth 2 -type f | sort
-
-echo
-echo "wine loader:"
-file /opt/wine-stable/bin/wine
-
-echo
-echo "wine64:"
-ls -l /opt/wine-stable/bin/wine64 || true
-
-echo
-echo "preloaders:"
-find /opt/wine-stable -name '*preloader*'
-
-echo
-echo "ldd wine64:"
-ldd /opt/wine-stable/bin/wine64 2>&1 || true
-
-exec wine cmd /c ver
+exec /bin/bash /entrypoint.sh

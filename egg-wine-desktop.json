@@ -100,9 +100,9 @@
         },
         {
             "name": "DLL Overrides",
-            "description": "Optional WINEDLLOVERRIDES value.",
+            "description": "WINEDLLOVERRIDES value. The default prevents interactive Gecko and Mono installer prompts during prefix initialization.",
             "env_variable": "WINEDLLOVERRIDES",
-            "default_value": "",
+            "default_value": "mscoree,mshtml=",
             "user_viewable": true,
             "user_editable": true,
             "rules": "nullable|string|max:255",
